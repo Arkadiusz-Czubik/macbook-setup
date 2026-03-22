@@ -79,7 +79,7 @@ chezmoi apply
 
 # --- 5. Brewfile ---
 echo "[5/7] Installing packages from Brewfile..."
-brew bundle install --file="$SCRIPT_DIR/Brewfile" --no-lock
+brew bundle install --file="$SCRIPT_DIR/Brewfile"
 
 # --- 6. SDKMAN + Java ---
 echo "[6/7] Setting up SDKMAN..."
