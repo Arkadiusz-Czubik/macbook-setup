@@ -12,7 +12,7 @@ alias ll="ls -la"
 alias zce="$EDITOR ~/.zshrc"
 alias bbi="brew bundle install --file=~/.local/share/chezmoi/.setup/Brewfile"
 alias bbe="$EDITOR ~/.local/share/chezmoi/.setup/Brewfile"
-alias clp='CLAUDE_CONFIG_DIR=$HOME/.claude-private claude'
+alias clp='CLAUDE_CONFIG_DIR=$HOME/.claude-personal claude'
 alias clw='CLAUDE_CONFIG_DIR=$HOME/.claude-work claude'
 
 # Zoxide
