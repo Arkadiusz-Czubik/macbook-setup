@@ -3,3 +3,11 @@
 	email = arek.czubik@gmail.com
 [core]
 	autocrlf = input
+[init]
+	defaultBranch = main
+[push]
+	autoSetupRemote = true
+[includeIf "gitdir:~/src-private/"]
+	path = ~/.gitconfig-personal
+[includeIf "gitdir:~/src-volume/"]
+	path = ~/.gitconfig-work
