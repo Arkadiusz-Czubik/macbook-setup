@@ -18,12 +18,13 @@ else
 fi
 
 # Install Java LTS versions (Amazon Corretto)
-echo "☕ Installing Java..."
-sdk install java 21.0.1-amzn || true  # Amazon Corretto JDK 21 (LTS)
-sdk install java 17.0.9-amzn || true  # Amazon Corretto JDK 17 (LTS)
+echo "Installing Java..."
+sdk install java 25.0.2-amzn || true
+sdk install java 21.0.10-amzn || true
+sdk install java 17.0.18-amzn || true
 
-# Set Java 21 as default
-sdk default java 21.0.1-amzn
+# Set Java 25 as default
+sdk default java 25.0.2-amzn
 
 # Install latest stable Gradle
 echo "🏗️  Installing Gradle..."
