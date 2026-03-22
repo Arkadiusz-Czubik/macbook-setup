@@ -426,7 +426,83 @@ docker run --rm -v claude-yolo-auth-personal:/data alpine ls -la /data
 
 ---
 
-## 12. Otwarte tematy (nie zrobione)
+## 12. Docker backup/restore
+
+### Skrypty
+
+```
+.setup/docker/
+├── list-docker.sh      # Pokaż aktualny stan (volumes, networks, kontenery, images, backupy)
+├── backup-docker.sh    # Backup wszystkich volumes + metadata do ~/docker-backups/YYYYMMDD-HHMMSS/
+└── restore-docker.sh   # Restore volumes i sieci z backupu
+```
+
+### Workflow przy reinstalacji
+
+```bash
+# PRZED reinstalacją:
+~/.local/share/chezmoi/.setup/docker/backup-docker.sh
+# Skopiuj ~/docker-backups/ na TrueNAS lub dysk zewnętrzny
+
+# PO reinstalacji (po bootstrap.sh + Docker Desktop):
+~/.local/share/chezmoi/.setup/docker/restore-docker.sh ~/docker-backups/20260322-160000
+# Pull images:
+cat ~/docker-backups/20260322-160000/images.txt | xargs -L1 docker pull
+```
+
+### Co jest backupowane
+
+| Element | Backup | Restore |
+|---------|--------|---------|
+| Volumes (dane) | tar.gz per volume | automatyczny |
+| Custom networks | JSON definicje | automatyczny (z subnet) |
+| Container list | tekstowa lista | tylko jako referencja |
+| Image list | tekstowa lista | `docker pull` ręcznie |
+
+### Ważne uwagi
+- Docker state jest **globalny** (nie per user) — wszystkie volumes/networks widoczne dla wszystkich userów na maszynie
+- Docker socket **nie jest montowany** do yolo kontenerów — Claude nie ma dostępu do Docker API z wnętrza kontenera
+- Yolo auth volumes (`claude-yolo-auth-*`) nie wymagają backupu — wystarczy ponowny `/login`
+
+---
+
+## 13. Time Machine
+
+### Status
+Nie skonfigurowany na M1. Do ustawienia przy sesji z homelabem.
+
+### Plan konfiguracji
+
+**Na TrueNAS (jednorazowo per Mac):**
+1. Stwórz osobny dataset: `tank/backups/timemachine-m1` (osobny od M4)
+2. Włącz kompresję: `zfs set compression=lz4 tank/backups/timemachine-m1`
+3. Ustaw quota (np. 500GB): `zfs set quota=500G tank/backups/timemachine-m1`
+4. Stwórz SMB share z tego datasetu:
+   - Shares > SMB > Add
+   - Path: `/mnt/tank/backups/timemachine-m1`
+   - Purpose: **Multi-user Time Machine**
+   - Zaznacz "Enable"
+5. Upewnij się że SMB service działa
+
+**Na Macu (jednorazowo):**
+1. System Settings > General > Time Machine > Add Backup Disk
+2. Wybierz TrueNAS share (`timemachine-m1`)
+3. Podaj credentials do TrueNAS SMB
+4. Opcjonalnie: zaszyfruj backup (zalecane)
+
+**W bootstrap.sh:**
+Nie automatyzujemy — wymaga interaktywnej konfiguracji (credentials, szyfrowanie). Bootstrap wyświetla przypomnienie.
+
+### Dlaczego Time Machine mimo reproducible setup
+Nasz setup odtwarza: narzędzia, konfigurację, sekrety, Docker volumes. Ale NIE odtwarza:
+- Lokalne pliki projektów AI nie wpushowane do git
+- Dokumenty, zdjęcia, Downloads
+- Stan aplikacji (history przeglądarki, ustawienia GUI apps)
+- Cokolwiek czego zapomniałeś commitnąć
+
+---
+
+## 14. Otwarte tematy (nie zrobione)
 
 - [ ] 1Password SSH Agent — usunięcie kluczy prywatnych z dysku (po walidacji stabilności)
 - [ ] Autofill wyłączenie dla vault Migration (w rozszerzeniu przeglądarkowym 1P)
@@ -437,6 +513,9 @@ docker run --rm -v claude-yolo-auth-personal:/data alpine ls -la /data
 - [ ] Homelab wrapper scripts
 - [ ] MCP server whitelist
 - [ ] Przetestowanie bootstrap.sh na czystym userze
-- [ ] Przetestowanie devcontainer yolo mode
+- [ ] Przetestowanie devcontainer yolo mode (login działa, ale yolo session nie przetestowany end-to-end)
+- [ ] Devcontainer firewall — naprawić DNS resolution
 - [ ] gh do Brewfile (zainstalowane ręcznie, nie w Brewfile)
 - [ ] `~/dotfiles/wg.conf` — WireGuard config to sekret, nie powinien być w plaintext repo
+- [ ] Time Machine na TrueNAS — skonfigurować przy sesji z homelabem
+- [ ] Docker backup workflow — przetestować backup/restore end-to-end
