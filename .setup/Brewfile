@@ -33,6 +33,7 @@ brew "chezmoi"
 brew "node"
 brew "python@3.11"
 brew "awscli"              # awscli@2 not needed - it's the default
+brew "gh"
 
 # Applications (casks)
 cask "jetbrains-toolbox"   # JetBrains IDE manager
