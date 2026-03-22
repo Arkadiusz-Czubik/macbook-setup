@@ -1,0 +1,4 @@
+set clipboard=unnamed
+
+inoremap jk <Esc>
+

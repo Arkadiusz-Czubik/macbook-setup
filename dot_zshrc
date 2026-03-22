@@ -1,0 +1,27 @@
+# Your clean .zshrc - back to basics!
+
+# Your original configuration
+export PATH=/opt/homebrew/bin:$PATH
+export PATH="$HOME/.local/bin":$PATH
+export EDITOR="nvim"
+
+# Load the OH MY ZSH + P10K mess (hidden away)
+source ~/.config/zsh/oh-my-zsh-p10k.zsh
+
+# Aliases
+alias ll="ls -la"
+alias zce="$EDITOR ~/.zshrc"
+alias bbi="brew bundle install --file=~/dotfiles/Brewfile"
+alias bbe="nvim ~/dotfiles/Brewfile"
+alias clp='CLAUDE_CONFIG_DIR=$HOME/.claude-private claude'
+alias clw='CLAUDE_CONFIG_DIR=$HOME/.claude-work claude'
+
+# SDKMAN - must be at the end
+export SDKMAN_DIR="$HOME/.sdkman"
+[[ -s "$HOME/.sdkman/bin/sdkman-init.sh" ]] && source "$HOME/.sdkman/bin/sdkman-init.sh"
+
+# Added by LM Studio CLI (lms)
+export PATH="$PATH:/Users/arek/.lmstudio/bin"
+# End of LM Studio CLI section
+
+eval "$(zoxide init zsh)"  

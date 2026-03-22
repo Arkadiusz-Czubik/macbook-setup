@@ -1,0 +1,38 @@
+set which-key
+" set trackactionids
+
+" Set leader key to space
+let mapleader = " "
+
+" Reload ideavimrc easily
+nnoremap <leader>sv :source ~/.ideavimrc<CR>:echo "ideavimrc reloaded"<CR>
+
+" === Go/Navigation group (g prefix) ===
+nnoremap gb :action Back<CR>
+nnoremap gf :action Forward<CR>
+nnoremap gd :action GotoDeclaration<CR>
+nnoremap gi :action GotoImplementation<CR>
+nnoremap gu :action FindUsages<CR>
+nnoremap gs :action GotoSuperMethod<CR>
+nnoremap gt :action GotoTest<CR>
+nnoremap ge :action GotoNextError<CR>
+nnoremap gE :action GotoPreviousError<CR>
+
+" === Compile/Build group (c prefix) ===
+nnoremap cb :action Build<CR>
+nnoremap cc :action CompileDirty<CR>
+nnoremap cr :action Run<CR>
+nnoremap cd :action Debug<CR>
+nnoremap cs :action Stop<CR>
+nnoremap ct :action RunClass<CR>
+nnoremap cT :action DebugClass<CR>
+
+" Map jk to ESC in insert mode
+imap jk <Esc>
+
+" Optional: set a short timeout for the mapping
+set timeoutlen=200
+
+" Also try visual mode
+vmap jk <Esc>
+

@@ -1,0 +1,72 @@
+tap "gromgit/brewtils"
+brew "taproom"
+
+# Essential CLI tools
+brew "git"
+brew "curl"
+brew "wget"
+brew "tree"
+brew "htop"
+brew "jq"
+brew "ripgrep"
+brew "fd"
+brew "bat"
+brew "fzf"
+brew "zsh"
+brew "starship"
+brew "neovim"
+brew "d2"
+brew "graphviz"
+brew "mlx"
+brew "python"
+brew "zoxide"
+brew "lazygit"
+brew "llama.cpp"
+
+tap "koekeishiya/formulae"
+brew "llmfit"
+
+# Machine setup tools
+brew "chezmoi"
+
+# Development tools
+brew "node"
+brew "python@3.11"
+brew "awscli"              # awscli@2 not needed - it's the default
+
+# Applications (casks)
+cask "jetbrains-toolbox"   # JetBrains IDE manager
+cask "visual-studio-code"
+cask "iterm2"
+cask "firefox"
+cask "docker-desktop"
+cask "postman"
+cask "slack"
+cask "bitwarden"
+cask "1password"
+cask "1password-cli"
+cask "claude"
+cask "obsidian"
+cask "lm-studio"
+cask "qbittorrent"
+cask "vlc"
+cask "typora"
+cask "steam"
+cask "ollama"
+cask "microsoft-teams"
+cask "opensuperwhisper"
+cask "spotify"
+cask "tidal"
+cask "blackhole-2ch"
+cask "teamviewer"
+cask "claude-code"
+
+# Application from Apple Store
+mas "WireGuard", id: 1451685025
+
+# VPN
+# cask "private-internet-access"  # PIA VPN client
+
+# Fonts (require homebrew/cask-fonts tap)
+cask "font-fira-code-nerd-font"
+cask "font-jetbrains-mono-nerd-font"

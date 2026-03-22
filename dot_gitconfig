@@ -1,0 +1,5 @@
+[user]
+	name = arek
+	email = arek.czubik@gmail.com
+[core]
+	autocrlf = input
