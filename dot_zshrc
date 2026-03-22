@@ -14,6 +14,8 @@ alias bbi="brew bundle install --file=~/.local/share/chezmoi/.setup/Brewfile"
 alias bbe="$EDITOR ~/.local/share/chezmoi/.setup/Brewfile"
 alias clp='CLAUDE_CONFIG_DIR=$HOME/.claude-personal claude'
 alias clw='CLAUDE_CONFIG_DIR=$HOME/.claude-work claude'
+alias clyp='~/.local/share/chezmoi/.setup/devcontainer/run-yolo.sh personal'
+alias clyw='~/.local/share/chezmoi/.setup/devcontainer/run-yolo.sh work'
 
 # Zoxide
 eval "$(zoxide init zsh)"
