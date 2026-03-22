@@ -1,0 +1,11 @@
+# Personal GitHub (Arkadiusz-Czubik)
+Host github.com-personal
+    HostName github.com
+    User git
+    IdentityFile ~/.ssh/id_ed25519_github_personal
+
+# Work GitHub (default)
+Host github.com
+    HostName github.com
+    User git
+    IdentityFile ~/.ssh/id_ed25519
