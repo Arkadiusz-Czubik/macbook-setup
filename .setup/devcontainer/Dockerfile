@@ -29,5 +29,10 @@ RUN useradd -m -s /bin/bash dev \
 COPY firewall.sh /usr/local/bin/firewall.sh
 RUN chmod +x /usr/local/bin/firewall.sh
 
+# Entrypoint — firewall then claude
+COPY entrypoint.sh /usr/local/bin/entrypoint.sh
+RUN chmod +x /usr/local/bin/entrypoint.sh
+
 USER dev
 WORKDIR /workspace
+ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]

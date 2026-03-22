@@ -272,31 +272,141 @@ Statusline: `/Users/arek/.claude-work/statusline-command.sh` → `$HOME/.claude-
 
 ## 10. Devcontainer — YOLO mode
 
+### Cel
+Tryb w którym Claude Code ma pełne uprawnienia (`--dangerously-skip-permissions`) — zero pytań o pozwolenia — ale jest bezpieczny dzięki izolacji kontenera Docker. Idealny do automatycznej implementacji po wcześniejszym zaplanowaniu w normalnym trybie.
+
 ### Architektura
-Docker container (Ubuntu 24.04) z:
-- Claude Code zainstalowany globalnie
-- Network firewall (iptables) — tylko Claude API, GitHub, npm, pypi
-- Non-root user `dev`
-- Projekt zamontowany w `/workspace`
-- Auth token z `~/.claude-{personal,work}/.claude.json` zamontowany read-only
 
-### Pliki
-- `Dockerfile` — Ubuntu 24.04, Node 22, Claude Code, user dev
-- `firewall.sh` — iptables allowlist (api.anthropic.com, api.claude.ai, github.com, registry.npmjs.org, pypi.org)
-- `run-yolo.sh` — orchestrator, parametr `personal`/`work`
-
-### Użycie
-```bash
-clyp                          # yolo personal, bieżący dir
-clyw                          # yolo work, bieżący dir
-clyp ~/src-private/projekt    # yolo personal, konkretny projekt
+```
+Mac (host)
+│
+├── ~/src-private/projekt/       ← montowany do kontenera jako /workspace (read-write)
+├── ~/.claude-personal/          ← NIE montowany (izolacja od hosta)
+│
+└── Docker Desktop (VM z Linuxem, niewidoczna dla usera)
+    └── Kontener Ubuntu 24.04
+        ├── /workspace/          ← projekt z hosta (jedyny punkt kontaktu)
+        ├── /home/dev/           ← Docker named volume (auth token, przeżywa restarty)
+        │   ├── .claude.json     ← token OAuth (osobny login w kontenerze)
+        │   └── .claude/         ← state, backups
+        ├── Claude Code v2.1.81  ← zainstalowany globalnie (npm -g)
+        └── user: dev (uid 1001, non-root, sudo bez hasła dla firewalla)
 ```
 
-### Bezpieczeństwo
-- `.claude.json` read-only — kontener nie może zmienić auth
-- Brak dostępu do: `~/.ssh`, `~/.aws`, 1Password, Keychain, home dir
-- Sieć: tylko whitelistowane domeny
-- Po `docker run --rm` — kontener znika, nic nie zostaje
+### Mechanizmy bezpieczeństwa
+
+**1. Docker filesystem isolation (kernel-level)**
+Kontener ma własny root filesystem. Nie widzi niczego z hosta oprócz jawnie zamontowanych katalogów. Zweryfikowane testy:
+
+| Zasób hosta | Z kontenera | Status |
+|-------------|-------------|--------|
+| `~/.ssh/` (klucze SSH) | niedostępny | BLOCKED |
+| `~/.aws/` (AWS creds) | niedostępny | BLOCKED |
+| 1Password (socket, dane) | niedostępny | BLOCKED |
+| macOS Keychain | niedostępny | BLOCKED |
+| `~/.env` pliki | niedostępny | BLOCKED |
+| Home dir hosta | niedostępny | BLOCKED |
+| `/workspace/` (projekt) | read-write | ALLOWED (zamierzone) |
+
+**2. Non-root user**
+Claude działa jako user `dev` (uid 1001). Ma sudo tylko dla firewalla (`NOPASSWD` w sudoers). Nawet gdyby Claude próbował eskalować — jest w kontenerze, nie na hoście.
+
+**3. Docker named volumes (auth)**
+Auth token NIE jest kopiowany z hosta. Osobny login w kontenerze (`/login`). Token żyje w named Docker volume (`claude-yolo-auth-personal` / `claude-yolo-auth-work`). Volume przeżywa restarty kontenera, ale jest odizolowany od hosta.
+
+**4. --rm flag**
+Po zakończeniu sesji kontener jest automatycznie usuwany. Nie zostają żadne procesy, pliki tymczasowe, cache.
+
+**5. Network firewall (TODO — tymczasowo wyłączony)**
+Iptables allowlist ogranicza wyjście sieciowe do:
+- `api.anthropic.com`, `api.claude.ai` — Claude API
+- `sentry.io`, `statsig.anthropic.com` — telemetria Claude
+- `github.com`, `api.github.com` — git operations
+- `registry.npmjs.org` — npm packages
+- `pypi.org`, `files.pythonhosted.org` — Python packages
+
+Status: wyłączony z powodu problemów z DNS resolution w kontenerze. Do naprawienia.
+
+### Pliki
+
+```
+.setup/devcontainer/
+├── Dockerfile        # Base image: Ubuntu 24.04
+│                     # Instaluje: curl, git, jq, sudo, iptables, Node 22, Claude Code
+│                     # Tworzy usera dev (non-root)
+│                     # Kopiuje firewall.sh i entrypoint.sh
+│
+├── entrypoint.sh     # ENTRYPOINT kontenera
+│                     # Opcjonalnie odpala firewall (TODO)
+│                     # exec claude --dangerously-skip-permissions
+│                     # exec daje Claude bezpośredni dostęp do TTY
+│
+├── firewall.sh       # Iptables rules — default DROP + allowlist domen
+│                     # Rozwiązuje domeny przez DNS, dodaje IPs do allowlist
+│                     # Wymaga --cap-add NET_ADMIN w docker run
+│
+└── run-yolo.sh       # Orchestrator:
+                      # 1. Parsuje argumenty (personal/work, ścieżka projektu)
+                      # 2. Buduje Docker image (jeśli trzeba)
+                      # 3. Tworzy named volume dla auth (jeśli pierwszy raz)
+                      # 4. W trybie --login: odpala claude bez bypass (do logowania)
+                      # 5. W normalnym trybie: odpala claude z --dangerously-skip-permissions
+```
+
+### Workflow
+
+**Pierwszy raz — jednorazowy login per profil:**
+```bash
+# Login do personal (max plan):
+~/.local/share/chezmoi/.setup/devcontainer/run-yolo.sh personal --login
+# W Claude wpisz /login → przeglądarka → zaloguj się → /exit
+
+# Login do work (teams plan):
+~/.local/share/chezmoi/.setup/devcontainer/run-yolo.sh work --login
+```
+
+**Normalny workflow (plan → implement → review):**
+```bash
+# 1. Planuj z normalnym Claude na Macu (z permission checks):
+clp                              # albo clw
+# > "napisz plan implementacji feature X"
+# > "zapisz plan do PLAN.md"
+
+# 2. Implementuj w yolo kontenerze (bez pytań):
+clyp ~/src-private/moj-projekt   # albo clyw ~/src-volume/firmowy-projekt
+# Claude czyta PLAN.md, implementuje wszystko automatycznie
+# Zmiany lądują bezpośrednio w katalogu projektu na hoście
+
+# 3. Wróć do normalnego Claude, review:
+clp
+# > "review zmiany, commitnij"
+```
+
+**Aliasy:**
+
+| Alias | Komenda | Profil |
+|-------|---------|--------|
+| `clyp` | `run-yolo.sh personal` | Personal (max) |
+| `clyw` | `run-yolo.sh work` | Work (teams) |
+
+### Docker volumes
+
+```bash
+# Listuj auth volumes:
+docker volume ls | grep claude-yolo
+
+# Wymuś ponowne logowanie (usuń volume):
+docker volume rm claude-yolo-auth-personal
+
+# Sprawdź co jest w volume:
+docker run --rm -v claude-yolo-auth-personal:/data alpine ls -la /data
+```
+
+### Znane ograniczenia
+
+1. **Firewall wyłączony** — DNS resolution w kontenerze nie rozwiązuje poprawnie domen na etapie startu. Bez firewalla kontener ma pełny dostęp do internetu, ale nie ma czego exfiltrować (brak sekretów w kontenerze).
+2. **Auth wymaga osobnego loginu** — tokeny OAuth Claude Code nie są przenośne między maszynami/kontenerami. Trzeba się zalogować osobno w kontenerze.
+3. **Brak Git auth w kontenerze** — kontener nie ma SSH keys ani `gh auth`. Jeśli Claude potrzebuje klonować repo lub pushować, trzeba to zrobić na hoście.
 
 ---
 
