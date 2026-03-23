@@ -30,6 +30,10 @@ echo "[3/7] Installing 1Password..."
 brew install --cask 1password 2>/dev/null || true
 brew install --cask 1password-cli 2>/dev/null || true
 
+# Add GitHub to known hosts (avoids SSH prompt on first connection)
+mkdir -p ~/.ssh
+ssh-keyscan -t ed25519 github.com >> ~/.ssh/known_hosts 2>/dev/null || true
+
 # Skip manual setup if 1Password CLI already works
 if op account list &>/dev/null && ssh -T git@github.com-personal 2>&1 | grep -q "successfully"; then
     echo "[3/7] 1Password + SSH Agent: already configured"
