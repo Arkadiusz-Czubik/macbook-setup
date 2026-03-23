@@ -35,8 +35,22 @@ brew install chezmoi 2>/dev/null || true
 mkdir -p ~/.ssh
 ssh-keyscan -t ed25519 github.com >> ~/.ssh/known_hosts 2>/dev/null || true
 
-# --- 4. chezmoi + dotfiles (creates ~/.ssh/config with IdentityAgent) ---
-echo "[4/7] Setting up chezmoi + dotfiles..."
+# --- 4. Oh My Zsh + Powerlevel10k + chezmoi dotfiles ---
+echo "[4/7] Setting up shell + dotfiles..."
+
+# Oh My Zsh
+if [ ! -d "$HOME/.oh-my-zsh" ]; then
+    echo "  Installing Oh My Zsh..."
+    RUNZSH=no KEEP_ZSHRC=yes sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
+fi
+
+# Powerlevel10k theme
+if [ ! -d "${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/themes/powerlevel10k" ]; then
+    echo "  Installing Powerlevel10k..."
+    git clone --depth=1 https://github.com/romkatv/powerlevel10k.git "${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/themes/powerlevel10k"
+fi
+
+# chezmoi + dotfiles
 if [ ! -d "$HOME/.local/share/chezmoi/.git" ]; then
     chezmoi init https://github.com/Arkadiusz-Czubik/macbook-setup.git
 fi
