@@ -25,18 +25,26 @@ else
     echo "[2/7] Homebrew: already installed"
 fi
 
-# --- 3. 1Password + CLI (needed before chezmoi for secrets) ---
-echo "[3/7] Installing 1Password..."
+# --- 3. 1Password + CLI + chezmoi ---
+echo "[3/7] Installing 1Password + chezmoi..."
 brew install --cask 1password 2>/dev/null || true
 brew install --cask 1password-cli 2>/dev/null || true
+brew install chezmoi 2>/dev/null || true
 
 # Add GitHub to known hosts (avoids SSH prompt on first connection)
 mkdir -p ~/.ssh
 ssh-keyscan -t ed25519 github.com >> ~/.ssh/known_hosts 2>/dev/null || true
 
-# Skip manual setup if 1Password CLI already works
+# --- 4. chezmoi + dotfiles (creates ~/.ssh/config with IdentityAgent) ---
+echo "[4/7] Setting up chezmoi + dotfiles..."
+if [ ! -d "$HOME/.local/share/chezmoi/.git" ]; then
+    chezmoi init https://github.com/Arkadiusz-Czubik/macbook-setup.git
+fi
+chezmoi apply
+
+# --- 5. 1Password SSH Agent setup (after chezmoi so ~/.ssh/config exists) ---
 if op account list &>/dev/null && ssh -T git@github.com-personal 2>&1 | grep -q "successfully"; then
-    echo "[3/7] 1Password + SSH Agent: already configured"
+    echo "[5/7] 1Password + SSH Agent: already configured"
 else
     echo ""
     echo ">>> MANUAL STEPS REQUIRED (1Password setup):"
@@ -59,43 +67,34 @@ else
     read -n 1
     echo ""
 
-    # Verify 1Password CLI works
-    if ! op account list &>/dev/null; then
-        echo "[!!] 1Password CLI not working. Check that 'Integrate with 1Password CLI' is enabled."
-        echo ">>> Fix it and press any key to retry."
-        read -n 1
+    # Verify
+    if op account list &>/dev/null; then
+        echo "[OK] 1Password CLI works"
+    else
+        echo "[!!] 1Password CLI not working — skipping, fix later."
     fi
 
-    # Verify SSH agent works
-    echo "Verifying SSH agent..."
     if ssh -T git@github.com-personal 2>&1 | grep -q "successfully"; then
         echo "[OK] SSH to GitHub (personal) works"
     else
-        echo "[!!] SSH to GitHub (personal) failed. Check 1Password SSH Agent setup."
-        echo ">>> Fix it and press any key to continue anyway."
-        read -n 1
+        echo "[!!] SSH to GitHub (personal) failed — skipping, fix later."
     fi
 fi
 
-# --- 4. chezmoi + dotfiles ---
-echo "[4/7] Setting up chezmoi + dotfiles..."
-brew install chezmoi 2>/dev/null || true
-
-if [ ! -d "$HOME/.local/share/chezmoi/.git" ]; then
-    chezmoi init git@github.com-personal:Arkadiusz-Czubik/macbook-setup.git
+# Switch chezmoi remote to SSH (now that SSH works)
+cd "$HOME/.local/share/chezmoi"
+if git remote get-url origin 2>/dev/null | grep -q "https://"; then
+    git remote set-url origin git@github.com-personal:Arkadiusz-Czubik/macbook-setup.git 2>/dev/null || true
 fi
-chezmoi apply
+cd - >/dev/null
 
-# --- 5. Brewfile ---
-echo "[5/7] Installing packages from Brewfile..."
+# --- 6. Brewfile ---
+echo "[6/7] Installing packages from Brewfile..."
 brew bundle install --file="$SCRIPT_DIR/Brewfile" --verbose
 
-# --- 6. SDKMAN + Java ---
-echo "[6/7] Setting up SDKMAN..."
+# --- 7. SDKMAN + Java + macOS security ---
+echo "[7/7] Setting up SDKMAN + macOS security..."
 bash "$SCRIPT_DIR/setup-sdkman.sh"
-
-# --- 7. macOS security hardening ---
-echo "[7/7] Applying macOS security settings..."
 bash "$SCRIPT_DIR/macos-security.sh"
 
 echo ""
