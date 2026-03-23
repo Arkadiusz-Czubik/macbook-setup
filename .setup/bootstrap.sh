@@ -106,8 +106,24 @@ cd - >/dev/null
 echo "[6/7] Installing packages from Brewfile..."
 brew bundle install --file="$SCRIPT_DIR/Brewfile" --verbose
 
-# --- 7. SDKMAN + Java + macOS security ---
-echo "[7/7] Setting up SDKMAN + macOS security..."
+# --- 7. WireGuard VPN config (from 1Password) ---
+if op account list &>/dev/null; then
+    echo "[7/8] Setting up WireGuard VPN..."
+    WG_DIR="/etc/wireguard"
+    if [ ! -f "$WG_DIR/wg0.conf" ]; then
+        sudo mkdir -p "$WG_DIR"
+        op read "op://Work/WireGuard VPN/notesPlain" | sudo tee "$WG_DIR/wg0.conf" >/dev/null
+        sudo chmod 600 "$WG_DIR/wg0.conf"
+        echo "[OK] WireGuard config installed"
+    else
+        echo "[7/8] WireGuard: already configured"
+    fi
+else
+    echo "[7/8] WireGuard: skipped (1Password not configured)"
+fi
+
+# --- 8. SDKMAN + Java + macOS security ---
+echo "[8/8] Setting up SDKMAN + macOS security..."
 bash "$SCRIPT_DIR/setup-sdkman.sh"
 bash "$SCRIPT_DIR/macos-security.sh"
 
