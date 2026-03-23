@@ -1,5 +1,6 @@
-tap "gromgit/brewtils"
-brew "taproom"
+# Optional: TUI for Homebrew (uncomment if needed)
+# tap "gromgit/brewtils"
+# brew "taproom"
 
 # Essential CLI tools
 brew "git"
