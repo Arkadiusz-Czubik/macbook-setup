@@ -69,8 +69,15 @@ die()  { printf '\n\033[1;31m✗\033[0m %s\n' "$1" >&2; exit 1; }
 # Skrypt biegnie przez potok, więc STDIN to on sam — 'read' zjadłby własny kod
 # zamiast czekać na człowieka. Wejście człowieka idzie z /dev/tty.
 # To ta sama klasa błędu co A0 z R-018: krok zakładał terminal tam, gdzie go nie było.
+#
+# TESTUJEMY OTWARCIEM, nie prawami dostępu. '[ -r /dev/tty ]' zwraca prawdę
+# w sesji BEZ terminala: plik urządzenia istnieje i ma prawa rw, ale otwarcie
+# kończy się 'Device not configured' (ENXIO). Zmierzone w VM przez ssh bez -t:
+# zasiew uznawał, że terminal jest, i umierał na 'exec … < /dev/tty'.
+# Jedyny wiarygodny test to próba otwarcia — w podpowłoce, żeby nie zaśmiecić
+# deskryptorów skryptu.
 TTY=""
-[ -r /dev/tty ] && [ -w /dev/tty ] && TTY=/dev/tty
+if (exec 3<>/dev/tty) 2>/dev/null; then TTY=/dev/tty; fi
 
 manual() {
   printf '\n\033[1;35m[RĘCZNIE]\033[0m %s\n' "$1"
