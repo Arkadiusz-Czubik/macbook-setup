@@ -233,7 +233,13 @@ while IFS= read -r KEY; do
   # argumentu — inaczej wywala 'keyword identityagent extra arguments at end of
   # line'. Zmienna środowiskowa nie ma tego problemu.
   # (W PLIKU konfiguracyjnym cudzysłów jest i tam jest właściwym rozwiązaniem.)
-  OUT="$(SSH_AUTH_SOCK="$SOCK" ssh -T \
+  # '-n' JEST KONIECZNE, nie kosmetyczne: bez niego ssh czyta STDIN, a STDIN tej
+  # pętli to heredoc z listą kluczy. Pierwsze wywołanie ssh zjadałoby resztę
+  # listy, więc pętla kończyła się po pierwszym kluczu — a pierwszy w agencie
+  # („GitHub") nie daje się podpisać. Objaw: „żaden klucz nie uwierzytelnia się",
+  # przy w pełni sprawnym agencie i sprawnym kluczu na trzeciej pozycji.
+  # Znalezione w VM 2026-08-02; ta sama klasa co usterki drugiego rzędu z R-018.
+  OUT="$(SSH_AUTH_SOCK="$SOCK" ssh -n -T \
           -F /dev/null \
           -o IdentitiesOnly=yes \
           -o IdentityFile="$TMP/probe.pub" \
@@ -273,7 +279,8 @@ fi
 
 # ─── ~/.ssh/config, wersja na czas klonowania ──────────────────────────────
 # TO NIE JEST wersja docelowa. Pełna, opisana wersja przychodzi z chezmoi
-# w kroku B5 (bootstrap/ssh_config.validated). Tutaj jest minimum potrzebne, by
+# w kroku B5, z repo macbook-dotfiles (private_dot_ssh/private_config).
+# Tutaj jest minimum potrzebne, by
 # Z6 przeszedł: agent plus jawne przypisanie klucza do konta.
 #
 # Dlaczego IdentityFile wskazuje plik .pub: przy agencie SSH plik publiczny jest
@@ -287,7 +294,7 @@ fi
 
 {
   printf '# ~/.ssh/config — ZASIEW, wersja tymczasowa.\n'
-  printf '# Nadpisze ją chezmoi w kroku B5 (bootstrap/ssh_config.validated).\n'
+  printf '# Nadpisze ją chezmoi w kroku B5 (repo macbook-dotfiles).\n'
   printf '# Wygenerowane przez seed.sh — nie edytuj tutaj, popraw skrypt.\n\n'
   printf 'Host *\n    IdentityAgent "%s"\n\n' "$SOCK"
   printf 'Host github.com-personal\n'
