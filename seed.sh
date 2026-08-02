@@ -40,7 +40,12 @@ set -euo pipefail
 
 REPO_OWNER="Arkadiusz-Czubik"
 REPO_NAME="control-plane"
-CLONE_DIR="$HOME/$REPO_NAME"
+# ~/src-private/, nie ~/ (D-042). Ten katalog jest już nazwany w dot_gitconfig
+# przez [includeIf "gitdir:~/src-private/"], więc klon od razu łapie właściwą
+# tożsamość gita i przestaje być wyjątkiem stojącym samotnie w katalogu domowym
+# obok ~/src-volume/. 'git clone' tworzy katalogi nadrzędne sam — 'mkdir -p'
+# byłby tu zbędny (sprawdzone 2026-08-02).
+CLONE_DIR="$HOME/src-private/$REPO_NAME"
 
 OP_TEAM_ID="2BUA8C4S2C"
 OP_PKG_URL="https://downloads.1password.com/mac/1Password.pkg"
