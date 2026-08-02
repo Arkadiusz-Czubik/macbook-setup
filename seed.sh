@@ -330,7 +330,13 @@ say "    ~/.ssh/config zasiany"
 # git przychodzi z Xcode Command Line Tools, a te ściąga instalator Homebrew sam
 # przez 'softwareupdate' — bez okna dialogowego (R-014, ustalenie 4). Dlatego
 # Homebrew MUSI być przed Z6, a nie po nim.
-if command -v brew >/dev/null 2>&1; then
+#
+# Sprawdzamy PLIK, nie 'command -v brew'. Homebrew wstawia się do PATH przez
+# /etc/paths.d/homebrew, który czyta 'path_helper' — a ten działa wyłącznie
+# w powłoce LOGOWANIA. W powłoce nielogowania (krok skryptu, 'ssh host komenda')
+# brew jest zainstalowany i niewidoczny jednocześnie, więc 'command -v' kazałby
+# instalować go po raz drugi. Zmierzone w VM 2026-08-02.
+if [ -x /opt/homebrew/bin/brew ]; then
   say "Z5. Homebrew już jest — pomijam"
 else
   say "Z5. Homebrew — instaluje przy okazji Xcode Command Line Tools"
