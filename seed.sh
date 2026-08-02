@@ -1,7 +1,7 @@
 #!/bin/bash
 # seed.sh — ZASIEW: jedyny plik uruchamiany SPOZA repozytorium
 #
-#   bash <(curl -fsSL https://raw.githubusercontent.com/Arkadiusz-Czubik/macbook-setup/main/seed.sh)
+#   bash <(curl -fsSL https://raw.githubusercontent.com/Arkadiusz-Czubik/macbook-seed/main/seed.sh)
 #
 # Realizuje D-030. Odpowiada na pytanie, na które przez trzy sesje nie było
 # odpowiedzi: CZYM ŚCIĄGNĄĆ PIERWSZY PLIK. Testy z sesji 2 i 3 montowały katalog
@@ -9,7 +9,9 @@
 # na maszynie. Przy prawdziwej odbudowie ten stan nie zachodzi — to była luka 3.
 #
 # ŹRÓDŁO PRAWDY tego pliku to control-plane/bootstrap/seed.sh. Kopia w publicznym
-# repo macbook-setup jest publikacją, nie oryginałem. Rozjazd = błąd publikacji.
+# repo macbook-seed jest publikacją, nie oryginałem. Rozjazd = błąd publikacji.
+# Repo nazywało się macbook-setup do 2026-08-02 — nazwa zmieniona w D-038, bo
+# „setup" nie znaczyło nic i repo zbierało wszystko. Teraz trzyma jeden plik.
 #
 # ═══════════════════════════════════════════════════════════════════════════
 # KOLEJNOŚĆ JEST WIĄŻĄCA i ustalona przez Ariusza (D-030):
